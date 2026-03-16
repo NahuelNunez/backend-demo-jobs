@@ -3,17 +3,17 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
 }
 
 model chat {
   id              String          @id @default(uuid())
   createdAt       DateTime        @default(now())
   providerId      String
-  providerprofile providerprofile @relation(fields: [providerId], references: [id], onDelete: Cascade, map: "Chat_providerId_fkey")
+  providerprofile providerprofile @relation(fields: [providerId], references: [id], onDelete: Cascade)
   message         message[]
 
-  @@index([providerId], map: "Chat_providerId_fkey")
+  @@index([providerId], map: "Chat_providerId_idx")
 }
 
 model contractorprofile {
@@ -39,11 +39,11 @@ model message {
   attachmentUrl  String?
   attachmentType String?
   createdAt      DateTime @default(now())
-  chat           chat     @relation(fields: [chatId], references: [id], onDelete: Cascade, map: "Message_chatId_fkey")
-  user           user     @relation(fields: [senderId], references: [id], onDelete: Cascade, map: "Message_senderId_fkey")
+  chat           chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user           user     @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
-  @@index([chatId], map: "Message_chatId_fkey")
-  @@index([senderId], map: "Message_senderId_fkey")
+  @@index([chatId], map: "Message_chatId_idx")
+  @@index([senderId], map: "Message_senderId_idx")
 }
 
 model providerdocument {
@@ -52,9 +52,9 @@ model providerdocument {
   url             String
   type            String
   createdAt       DateTime        @default(now())
-  providerprofile providerprofile @relation(fields: [providerId], references: [id], onDelete: Cascade, map: "ProviderDocument_providerId_fkey")
+  providerprofile providerprofile @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
-  @@index([providerId], map: "ProviderDocument_providerId_fkey")
+  @@index([providerId], map: "ProviderDocument_providerId_idx")
 }
 
 model providerprofile {
@@ -85,7 +85,7 @@ model providerprofile {
   totalRatings         Int                    @default(0)
   chat                 chat[]
   providerdocument     providerdocument[]
-  user                 user                   @relation(fields: [userId], references: [id], onDelete: Cascade, map: "ProviderProfile_userId_fkey")
+  user                 user                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   rating               rating[]
 }
 
@@ -97,11 +97,11 @@ model rating {
   comment             String?
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
-  contractorprofile   contractorprofile @relation(fields: [contractorProfileId], references: [id], onDelete: Cascade, map: "Rating_contractorProfileId_fkey")
-  providerprofile     providerprofile   @relation(fields: [providerId], references: [id], onDelete: Cascade, map: "Rating_providerId_fkey")
+  contractorprofile   contractorprofile @relation(fields: [contractorProfileId], references: [id], onDelete: Cascade)
+  providerprofile     providerprofile   @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
   @@unique([providerId, contractorProfileId], map: "Rating_providerId_contractorProfileId_key")
-  @@index([contractorProfileId], map: "Rating_contractorProfileId_fkey")
+  @@index([contractorProfileId], map: "Rating_contractorProfileId_idx")
   @@index([providerId], map: "Rating_providerId_idx")
 }
 
@@ -128,7 +128,7 @@ model notification {
   chatId    String?
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
-  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Notification_userId_fkey")
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt], map: "Notification_userId_createdAt_idx")
   @@index([userId, isRead], map: "Notification_userId_isRead_idx")

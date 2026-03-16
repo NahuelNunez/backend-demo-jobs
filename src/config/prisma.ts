@@ -1,4 +1,3 @@
-import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { PrismaClient } from "@prisma/client";
 import { env } from "./env";
 
@@ -9,19 +8,10 @@ declare global {
 
 let prisma: PrismaClient;
 
-const adapter = new PrismaMariaDb({
-  host: env.DB_HOST,
-  port: Number(env.DB_PORT),
-  user: env.DB_USER,
-  password: env.DB_PASSWORD,
-  database: env.DB_NAME,
-  connectionLimit: 5,
-});
-
 if (env.NODE_ENV === "production") {
-  prisma = new PrismaClient({ adapter });
+  prisma = new PrismaClient();
 } else {
-  if (!global.prisma) global.prisma = new PrismaClient({ adapter });
+  if (!global.prisma) global.prisma = new PrismaClient();
   prisma = global.prisma;
 }
 

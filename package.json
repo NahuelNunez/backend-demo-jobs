@@ -22,7 +22,6 @@
   },
   "homepage": "https://github.com/linearesdiego/backend-jobs#readme",
   "dependencies": {
-    "@prisma/adapter-mariadb": "^7.1.0",
     "@prisma/client": "^7.4.2",
     "@types/bcrypt": "^6.0.0",
     "@types/jsonwebtoken": "^9.0.10",
