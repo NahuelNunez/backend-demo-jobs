@@ -30,11 +30,9 @@ export function errorHandler(
     success: false,
     message: "Internal server error",
     error: "INTERNAL_SERVER_ERROR",
-    ...(process.env.NODE_ENV !== "production" && {
-      debug: {
-        message: error.message,
-        stack: error.stack,
-      },
-    }),
+    debug: {
+      message: error.message,
+      stack: error.stack,
+    },
   });
 }
