@@ -40,6 +40,7 @@
     "multer": "^2.0.2",
     "nodemailer": "^7.0.12",
     "pg": "^8.20.0",
+    "prisma": "^7.4.2",
     "socket.io": "^4.8.1",
     "winston": "^3.19.0",
     "zod": "^4.2.1"
@@ -51,8 +52,12 @@
     "@types/node": "^25.0.1",
     "@types/pg": "^8.18.0",
     "nodemon": "^3.1.11",
-    "prisma": "^7.4.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "@prisma/client": {
+      "prisma": "$prisma"
+    }
   }
 }
