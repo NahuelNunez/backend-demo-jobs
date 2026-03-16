@@ -7,7 +7,7 @@ datasource db {
 }
 
 model chat {
-  id              String          @id
+  id              String          @id @default(uuid())
   createdAt       DateTime        @default(now())
   providerId      String
   providerprofile providerprofile @relation(fields: [providerId], references: [id], onDelete: Cascade, map: "Chat_providerId_fkey")
@@ -17,7 +17,7 @@ model chat {
 }
 
 model contractorprofile {
-  id       String   @id
+  id       String   @id @default(uuid())
   userId   String   @unique(map: "ContractorProfile_userId_key")
   fullName String?
   username String?
@@ -32,7 +32,7 @@ model contractorprofile {
 }
 
 model message {
-  id             String   @id
+  id             String   @id @default(uuid())
   chatId         String
   senderId       String
   text           String?
@@ -47,7 +47,7 @@ model message {
 }
 
 model providerdocument {
-  id              String          @id
+  id              String          @id @default(uuid())
   providerId      String
   url             String
   type            String
@@ -58,7 +58,7 @@ model providerdocument {
 }
 
 model providerprofile {
-  id                   String                 @id
+  id                   String                 @id @default(uuid())
   userId               String                 @unique(map: "ProviderProfile_userId_key")
   fullName             String
   username             String?
@@ -90,13 +90,13 @@ model providerprofile {
 }
 
 model rating {
-  id                  String            @id
+  id                  String            @id @default(uuid())
   providerId          String
   contractorProfileId String
   rating              Int
   comment             String?
   createdAt           DateTime          @default(now())
-  updatedAt           DateTime
+  updatedAt           DateTime          @updatedAt
   contractorprofile   contractorprofile @relation(fields: [contractorProfileId], references: [id], onDelete: Cascade, map: "Rating_contractorProfileId_fkey")
   providerprofile     providerprofile   @relation(fields: [providerId], references: [id], onDelete: Cascade, map: "Rating_providerId_fkey")
 
@@ -106,12 +106,12 @@ model rating {
 }
 
 model user {
-  id                String             @id
+  id                String             @id @default(uuid())
   email             String             @unique(map: "User_email_key")
   password          String
   role              user_role
   createdAt         DateTime           @default(now())
-  updatedAt         DateTime
+  updatedAt         DateTime           @updatedAt
   isVerified        Boolean            @default(false)
   contractorprofile contractorprofile?
   message           message[]
@@ -120,7 +120,7 @@ model user {
 }
 
 model notification {
-  id        String   @id
+  id        String   @id @default(uuid())
   userId    String
   type      String
   title     String

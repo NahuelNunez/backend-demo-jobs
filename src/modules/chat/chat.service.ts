@@ -5,7 +5,7 @@ class ChatService {
   // Create or get chat for a provider
   async getOrCreateChat(providerId: string, userId: string) {
     // Verify provider exists
-    const provider = await prisma.providerProfile.findUnique({
+    const provider = await prisma.providerprofile.findUnique({
       where: { id: providerId },
       include: {
         user: true,
@@ -29,18 +29,18 @@ class ChatService {
     if (user.role === "PROVIDER" && !isProvider)
       throw new CustomError(
         "You don't have permission to access this chat",
-        403
+        403,
       );
 
     // Find existing chat
     let chat = await prisma.chat.findFirst({
       where: { providerId },
       include: {
-        provider: true,
-        messages: {
+        providerprofile: true,
+        message: {
           orderBy: { createdAt: "asc" },
           include: {
-            sender: {
+            user: {
               select: {
                 id: true,
                 email: true,
@@ -56,13 +56,13 @@ class ChatService {
     if (!chat) {
       chat = await prisma.chat.create({
         data: {
-          providerId,
+          providerprofile: { connect: { id: providerId } },
         },
         include: {
-          provider: true,
-          messages: {
+          providerprofile: true,
+          message: {
             include: {
-              sender: {
+              user: {
                 select: {
                   id: true,
                   email: true,
@@ -92,7 +92,7 @@ class ChatService {
     const chat = await prisma.chat.findUnique({
       where: { id: chatId },
       include: {
-        provider: {
+        providerprofile: {
           include: {
             user: true,
           },
@@ -103,7 +103,7 @@ class ChatService {
     if (!chat) throw new CustomError("Chat not found", 404);
 
     // Verify user has permission to send messages in this chat
-    const isProvider = chat.provider.user.id === senderId;
+    const isProvider = chat.providerprofile.user.id === senderId;
 
     // Get only sender role
     const sender = await prisma.user.findUnique({
@@ -119,7 +119,7 @@ class ChatService {
     if (!isProvider && !isContractor)
       throw new CustomError(
         "You don't have permission to send messages in this chat",
-        403
+        403,
       );
 
     if (!text && !attachmentUrl)
@@ -127,14 +127,14 @@ class ChatService {
 
     const message = await prisma.message.create({
       data: {
-        chatId,
-        senderId,
+        chat: { connect: { id: chatId } },
+        user: { connect: { id: senderId } },
         text,
         attachmentUrl,
         attachmentType,
       },
       include: {
-        sender: {
+        user: {
           select: {
             id: true,
             email: true,
@@ -152,15 +152,15 @@ class ChatService {
     const chat = await prisma.chat.findUnique({
       where: { id: chatId },
       include: {
-        provider: {
+        providerprofile: {
           include: {
             user: true,
           },
         },
-        messages: {
+        message: {
           orderBy: { createdAt: "asc" },
           include: {
-            sender: {
+            user: {
               select: {
                 id: true,
                 email: true,
@@ -177,7 +177,7 @@ class ChatService {
     }
 
     // Verify permissions
-    const isProvider = chat.provider.user.id === userId;
+    const isProvider = chat.providerprofile.user.id === userId;
 
     // Get only user role
     const user = await prisma.user.findUnique({
@@ -193,18 +193,18 @@ class ChatService {
 
     // If contractor, must have participated in chat
     if (user.role === "CONTRACTOR") {
-      const hasParticipatedInChat = chat.messages.some(
-        (message) => message.senderId === userId
+      const hasParticipatedInChat = chat.message.some(
+        (message) => message.senderId === userId,
       );
 
       if (!hasParticipatedInChat)
         throw new CustomError(
           "You don't have permission to view this chat. You must send at least one message first.",
-          403
+          403,
         );
     }
 
-    return chat.messages;
+    return chat.message;
   }
 
   // Get all chats for a user
@@ -212,8 +212,8 @@ class ChatService {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        providerProfile: true,
-        contractorProfile: true,
+        providerprofile: true,
+        contractorprofile: true,
       },
     });
 
@@ -224,12 +224,12 @@ class ChatService {
       id: string;
       providerId: string;
       createdAt: Date;
-      provider: {
+      providerprofile: {
         id: string;
         title: string | null;
         fullName: string;
       };
-      messages: Array<{
+      message: Array<{
         id: string;
         chatId: string;
         senderId: string;
@@ -237,7 +237,7 @@ class ChatService {
         attachmentUrl: string | null;
         attachmentType: string | null;
         createdAt: Date;
-        sender: {
+        user: {
           id: string;
           email: string;
           role: string;
@@ -247,24 +247,24 @@ class ChatService {
 
     let chats: ChatWithLastMessage[] = [];
 
-    if (user.role === "PROVIDER" && user.providerProfile) {
+    if (user.role === "PROVIDER" && user.providerprofile) {
       // Get provider chats
       chats = await prisma.chat.findMany({
         where: {
-          providerId: user.providerProfile.id,
+          providerId: user.providerprofile.id,
         },
         select: {
           id: true,
           providerId: true,
           createdAt: true,
-          provider: {
+          providerprofile: {
             select: {
               id: true,
               title: true,
               fullName: true,
             },
           },
-          messages: {
+          message: {
             orderBy: { createdAt: "desc" },
             take: 1,
             select: {
@@ -275,7 +275,7 @@ class ChatService {
               attachmentUrl: true,
               attachmentType: true,
               createdAt: true,
-              sender: {
+              user: {
                 select: {
                   id: true,
                   email: true,
@@ -293,7 +293,7 @@ class ChatService {
       // For contractors, get only chats where they have participated
       chats = await prisma.chat.findMany({
         where: {
-          messages: {
+          message: {
             some: {
               senderId: userId,
             },
@@ -303,14 +303,14 @@ class ChatService {
           id: true,
           providerId: true,
           createdAt: true,
-          provider: {
+          providerprofile: {
             select: {
               id: true,
               title: true,
               fullName: true,
             },
           },
-          messages: {
+          message: {
             orderBy: { createdAt: "desc" },
             take: 1,
             select: {
@@ -321,7 +321,7 @@ class ChatService {
               attachmentUrl: true,
               attachmentType: true,
               createdAt: true,
-              sender: {
+              user: {
                 select: {
                   id: true,
                   email: true,

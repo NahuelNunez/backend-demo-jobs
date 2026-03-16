@@ -1,4 +1,4 @@
-import { Role } from "@prisma/client";
+import { user_role } from "@prisma/client";
 import {
   IsEmail,
   IsNotEmpty,
@@ -23,8 +23,8 @@ export class RegisterDTO {
   password: string;
 
   @IsNotEmpty({ message: "Role is required" })
-  @IsEnum(Role, { message: "Invalid role" })
-  role: Role;
+  @IsEnum(user_role, { message: "Invalid role" })
+  role: user_role;
 }
 
 export class LoginDTO {

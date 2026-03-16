@@ -1,7 +1,7 @@
 import prisma from "../../config/prisma";
 import { CustomError } from "../../utils/customError";
 import cloudinaryService from "../../utils/cloudinary.service";
-import { ProviderStatus } from "@prisma/client";
+import { providerprofile_status } from "@prisma/client";
 
 export const profileService = {
   async getProfile(userId: string) {
@@ -9,8 +9,8 @@ export const profileService = {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        contractorProfile: true,
-        providerProfile: true,
+        contractorprofile: true,
+        providerprofile: true,
       },
     });
 
@@ -26,8 +26,8 @@ export const profileService = {
       },
       profile:
         user.role === "CONTRACTOR"
-          ? user.contractorProfile
-          : user.providerProfile,
+          ? user.contractorprofile
+          : user.providerprofile,
     };
   },
 
@@ -35,8 +35,8 @@ export const profileService = {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        contractorProfile: true,
-        providerProfile: true,
+        contractorprofile: true,
+        providerprofile: true,
       },
     });
 
@@ -45,12 +45,12 @@ export const profileService = {
     }
 
     if (user.role === "CONTRACTOR") {
-      if (!user.contractorProfile) {
+      if (!user.contractorprofile) {
         throw new CustomError("Contractor profile not found", 404);
       }
 
-      const updatedProfile = await prisma.contractorProfile.update({
-        where: { id: user.contractorProfile.id },
+      const updatedProfile = await prisma.contractorprofile.update({
+        where: { id: user.contractorprofile.id },
         data: {
           fullName: data.fullName,
           username: data.username,
@@ -65,12 +65,12 @@ export const profileService = {
 
       return updatedProfile;
     } else if (user.role === "PROVIDER") {
-      if (!user.providerProfile) {
+      if (!user.providerprofile) {
         throw new CustomError("Provider profile not found", 404);
       }
 
-      const updatedProfile = await prisma.providerProfile.update({
-        where: { id: user.providerProfile.id },
+      const updatedProfile = await prisma.providerprofile.update({
+        where: { id: user.providerprofile.id },
         data: {
           fullName: data.fullName,
           username: data.username,
@@ -101,17 +101,17 @@ export const profileService = {
       description?: string;
       category?: string;
       estimatedPrice?: number;
-    }
+    },
   ) {
     // Get provider profile
-    const providerProfile = await prisma.providerProfile.findUnique({
+    const providerProfile = await prisma.providerprofile.findUnique({
       where: { userId },
     });
 
     if (!providerProfile) {
       throw new CustomError(
         "You must have a provider profile to update the application",
-        403
+        403,
       );
     }
 
@@ -119,12 +119,12 @@ export const profileService = {
     if (!providerProfile.profileComplete) {
       throw new CustomError(
         "You must complete your profile before creating/updating an application",
-        400
+        400,
       );
     }
 
     // Update application in profile
-    const updatedProfile = await prisma.providerProfile.update({
+    const updatedProfile = await prisma.providerprofile.update({
       where: { id: providerProfile.id },
       data: {
         title: data.title,
@@ -141,14 +141,14 @@ export const profileService = {
 
   async updateApplicationVideo(userId: string, videoFile: Express.Multer.File) {
     // Get provider profile
-    const providerProfile = await prisma.providerProfile.findUnique({
+    const providerProfile = await prisma.providerprofile.findUnique({
       where: { userId },
     });
 
     if (!providerProfile) {
       throw new CustomError(
         "You must have a provider profile to upload a video",
-        403
+        403,
       );
     }
 
@@ -167,7 +167,7 @@ export const profileService = {
       videoData = (await cloudinaryService.subirVideo(
         videoFile.buffer,
         "applications/videos",
-        `provider_${providerProfile.id}_${Date.now()}`
+        `provider_${providerProfile.id}_${Date.now()}`,
       )) as {
         videoUrl: string;
         videoClave: string;
@@ -180,7 +180,7 @@ export const profileService = {
     }
 
     // Update profile with video data
-    const updatedProfile = await prisma.providerProfile.update({
+    const updatedProfile = await prisma.providerprofile.update({
       where: { id: providerProfile.id },
       data: {
         videoUrl: videoData.videoUrl,
@@ -196,7 +196,7 @@ export const profileService = {
 
   async deleteApplicationVideo(userId: string) {
     // Get provider profile
-    const providerProfile = await prisma.providerProfile.findUnique({
+    const providerProfile = await prisma.providerprofile.findUnique({
       where: { userId },
     });
 
@@ -216,7 +216,7 @@ export const profileService = {
     }
 
     // Clear video fields in profile
-    const updatedProfile = await prisma.providerProfile.update({
+    const updatedProfile = await prisma.providerprofile.update({
       where: { id: providerProfile.id },
       data: {
         videoUrl: null,
@@ -230,9 +230,12 @@ export const profileService = {
     return updatedProfile;
   },
 
-  async changeApplicationStatus(userId: string, status: ProviderStatus) {
+  async changeApplicationStatus(
+    userId: string,
+    status: providerprofile_status,
+  ) {
     // Get provider profile
-    const providerProfile = await prisma.providerProfile.findUnique({
+    const providerProfile = await prisma.providerprofile.findUnique({
       where: { userId },
     });
 
@@ -245,13 +248,13 @@ export const profileService = {
       if (!providerProfile.title || !providerProfile.description) {
         throw new CustomError(
           "You must complete the application data before activating it",
-          400
+          400,
         );
       }
     }
 
     // Update status
-    const updatedProfile = await prisma.providerProfile.update({
+    const updatedProfile = await prisma.providerprofile.update({
       where: { id: providerProfile.id },
       data: { status },
     });
@@ -264,14 +267,14 @@ export const profileService = {
   async getActiveProviders(
     filters?: {
       category?: string;
-      status?: ProviderStatus;
+      status?: providerprofile_status;
       search?: string;
       location?: string;
       sortBy?: string;
       sortOrder?: string;
     },
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
   ) {
     const where: any = {
       profileComplete: true,
@@ -313,12 +316,13 @@ export const profileService = {
     const skip = (page - 1) * limit;
 
     // Get total count for pagination metadata
-    const total = await prisma.providerProfile.count({ where });
+    const total = await prisma.providerprofile.count({ where });
 
     // Determine sorting
     const sortBy = filters?.sortBy || "applicationCreatedAt";
-    const sortOrder = filters?.sortOrder?.toLowerCase() === "asc" ? "asc" : "desc";
-    
+    const sortOrder =
+      filters?.sortOrder?.toLowerCase() === "asc" ? "asc" : "desc";
+
     // Valid sort fields
     const validSortFields = [
       "applicationCreatedAt",
@@ -329,12 +333,12 @@ export const profileService = {
       "averageRating",
     ];
 
-    const orderByField = validSortFields.includes(sortBy) 
-      ? sortBy 
+    const orderByField = validSortFields.includes(sortBy)
+      ? sortBy
       : "applicationCreatedAt";
 
     // Get paginated providers
-    const providers = await prisma.providerProfile.findMany({
+    const providers = await prisma.providerprofile.findMany({
       where,
       skip,
       take: limit,
@@ -362,7 +366,7 @@ export const profileService = {
   },
 
   async getProviderById(providerId: string) {
-    const provider = await prisma.providerProfile.findUnique({
+    const provider = await prisma.providerprofile.findUnique({
       where: { id: providerId },
       include: {
         user: {
@@ -383,7 +387,7 @@ export const profileService = {
   },
 
   async getAvailableCategories() {
-    const categories = await prisma.providerProfile.findMany({
+    const categories = await prisma.providerprofile.findMany({
       where: {
         category: {
           not: null,

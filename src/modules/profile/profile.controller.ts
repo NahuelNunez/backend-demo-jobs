@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { profileService } from "./profile.service";
-import { ProviderStatus } from "@prisma/client";
+import { providerprofile_status } from "@prisma/client";
 
 export const profileController = {
   async getProfile(req: Request, res: Response) {
@@ -47,10 +47,12 @@ export const profileController = {
       const userId = req.user?.userId;
       const { title, description, category, estimatedPrice } = req.body;
 
-      const profile = await profileService.updateProviderApplication(
-        userId,
-        { title, description, category, estimatedPrice }
-      );
+      const profile = await profileService.updateProviderApplication(userId, {
+        title,
+        description,
+        category,
+        estimatedPrice,
+      });
 
       res.status(200).json({
         success: true,
@@ -79,7 +81,7 @@ export const profileController = {
 
       const profile = await profileService.updateApplicationVideo(
         userId,
-        videoFile
+        videoFile,
       );
 
       res.status(200).json({
@@ -119,7 +121,7 @@ export const profileController = {
       const userId = req.user?.userId;
       const { status } = req.body;
 
-      if (!status || !Object.values(ProviderStatus).includes(status)) {
+      if (!status || !Object.values(providerprofile_status).includes(status)) {
         return res.status(400).json({
           success: false,
           message: "Invalid status",
@@ -128,7 +130,7 @@ export const profileController = {
 
       const profile = await profileService.changeApplicationStatus(
         userId,
-        status
+        status,
       );
 
       res.status(200).json({
@@ -151,24 +153,25 @@ export const profileController = {
       const { category, status, search, page, limit } = req.query;
 
       // Get filters from headers
-      const headerCategory = req.headers['x-category'] as string;
-      const headerStatus = req.headers['x-status'] as string;
-      const headerSearch = req.headers['x-search'] as string;
-      const headerLocation = req.headers['x-location'] as string;
-      const headerSortBy = req.headers['x-sort-by'] as string;
-      const headerSortOrder = req.headers['x-sort-order'] as string;
+      const headerCategory = req.headers["x-category"] as string;
+      const headerStatus = req.headers["x-status"] as string;
+      const headerSearch = req.headers["x-search"] as string;
+      const headerLocation = req.headers["x-location"] as string;
+      const headerSortBy = req.headers["x-sort-by"] as string;
+      const headerSortOrder = req.headers["x-sort-order"] as string;
 
       const filters: any = {};
       // Query params have priority over headers
       if (category) filters.category = category as string;
       else if (headerCategory) filters.category = headerCategory;
-      
-      if (status) filters.status = status as ProviderStatus;
-      else if (headerStatus) filters.status = headerStatus as ProviderStatus;
-      
+
+      if (status) filters.status = status as providerprofile_status;
+      else if (headerStatus)
+        filters.status = headerStatus as providerprofile_status;
+
       if (search) filters.search = search as string;
       else if (headerSearch) filters.search = headerSearch;
-      
+
       // Additional filters from headers only
       if (headerLocation) filters.location = headerLocation;
       if (headerSortBy) filters.sortBy = headerSortBy;
@@ -181,7 +184,7 @@ export const profileController = {
       const result = await profileService.getActiveProviders(
         filters,
         pageNumber,
-        pageSize
+        pageSize,
       );
 
       res.status(200).json({

@@ -50,13 +50,13 @@ export class AuthService {
 
       // Create profile according to role
       if (data.role === "CONTRACTOR") {
-        await tx.contractorProfile.create({
+        await tx.contractorprofile.create({
           data: {
             userId: user.id,
           },
         });
       } else if (data.role === "PROVIDER") {
-        await tx.providerProfile.create({
+        await tx.providerprofile.create({
           data: {
             userId: user.id,
             fullName: "",
@@ -290,7 +290,8 @@ export class AuthService {
     const user = await prisma.user.findUnique({ where: { email } });
 
     // Siempre respondemos igual para no filtrar si el email existe
-    if (!user) return { message: "If that email exists, a reset link has been sent" };
+    if (!user)
+      return { message: "If that email exists, a reset link has been sent" };
 
     await sendPasswordResetEmail(user.id, user.email);
 
@@ -301,12 +302,17 @@ export class AuthService {
     let payload: { userId: string; email: string };
 
     try {
-      payload = jwt.verify(token, this.JWT_SECRET) as { userId: string; email: string };
+      payload = jwt.verify(token, this.JWT_SECRET) as {
+        userId: string;
+        email: string;
+      };
     } catch {
       throw new CustomError("Invalid or expired reset token", 400);
     }
 
-    const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+    });
     if (!user) throw new CustomError("User not found", 404);
 
     const hashedPassword = await bcrypt.hash(newPassword, this.SALT_ROUNDS);

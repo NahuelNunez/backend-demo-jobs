@@ -9,7 +9,7 @@ export const ratingService = {
     contractorUserId: string,
     providerId: string,
     rating: number,
-    comment?: string
+    comment?: string,
   ) {
     // Validar rating
     if (rating < 1 || rating > 5) {
@@ -17,7 +17,7 @@ export const ratingService = {
     }
 
     // Verificar que el proveedor existe
-    const provider = await prisma.providerProfile.findUnique({
+    const provider = await prisma.providerprofile.findUnique({
       where: { id: providerId },
     });
 
@@ -26,7 +26,7 @@ export const ratingService = {
     }
 
     // Obtener el perfil del contratador
-    const contractor = await prisma.contractorProfile.findUnique({
+    const contractor = await prisma.contractorprofile.findUnique({
       where: { userId: contractorUserId },
     });
 
@@ -60,7 +60,7 @@ export const ratingService = {
           comment,
         },
         include: {
-          contractor: {
+          contractorprofile: {
             select: {
               id: true,
               fullName: true,
@@ -73,13 +73,13 @@ export const ratingService = {
       // Crear nueva calificación
       ratingRecord = await prisma.rating.create({
         data: {
-          providerId,
-          contractorProfileId: contractor.id,
+          providerprofile: { connect: { id: providerId } },
+          contractorprofile: { connect: { id: contractor.id } },
           rating,
           comment,
         },
         include: {
-          contractor: {
+          contractorprofile: {
             select: {
               id: true,
               fullName: true,
@@ -101,7 +101,7 @@ export const ratingService = {
    */
   async getProviderRatings(providerId: string) {
     // Verificar que el proveedor existe
-    const provider = await prisma.providerProfile.findUnique({
+    const provider = await prisma.providerprofile.findUnique({
       where: { id: providerId },
       select: {
         id: true,
@@ -119,7 +119,7 @@ export const ratingService = {
     const ratings = await prisma.rating.findMany({
       where: { providerId },
       include: {
-        contractor: {
+        contractorprofile: {
           select: {
             id: true,
             fullName: true,
@@ -143,7 +143,7 @@ export const ratingService = {
    */
   async getMyRatingForProvider(contractorUserId: string, providerId: string) {
     // Obtener el perfil del contratador
-    const contractor = await prisma.contractorProfile.findUnique({
+    const contractor = await prisma.contractorprofile.findUnique({
       where: { userId: contractorUserId },
     });
 
@@ -169,7 +169,7 @@ export const ratingService = {
    */
   async deleteRating(contractorUserId: string, providerId: string) {
     // Obtener el perfil del contratador
-    const contractor = await prisma.contractorProfile.findUnique({
+    const contractor = await prisma.contractorprofile.findUnique({
       where: { userId: contractorUserId },
     });
 
@@ -221,7 +221,7 @@ export const ratingService = {
     const totalRatings = stats._count.rating || 0;
 
     // Actualizar el perfil del proveedor
-    await prisma.providerProfile.update({
+    await prisma.providerprofile.update({
       where: { id: providerId },
       data: {
         averageRating: Math.round(averageRating * 10) / 10, // Redondear a 1 decimal
@@ -237,7 +237,7 @@ export const ratingService = {
    */
   async getRatingSummary(providerId: string) {
     // Verificar que el proveedor existe
-    const provider = await prisma.providerProfile.findUnique({
+    const provider = await prisma.providerprofile.findUnique({
       where: { id: providerId },
     });
 

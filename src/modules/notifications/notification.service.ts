@@ -11,10 +11,10 @@ class NotificationService {
     const chat = await prisma.chat.findUnique({
       where: { id: chatId },
       include: {
-        provider: {
+        providerprofile: {
           include: { user: true },
         },
-        messages: {
+        message: {
           select: { senderId: true },
           distinct: ["senderId"],
         },
@@ -23,16 +23,16 @@ class NotificationService {
 
     if (!chat) return [];
 
-    const providerUserId = chat.provider.user.id;
+    const providerUserId = chat.providerprofile.user.id;
     const isProviderSending = senderId === providerUserId;
 
     let recipientUserIds: string[] = [];
 
     if (isProviderSending) {
       // Notify all contractors who have participated in the chat
-      const contractorIds = chat.messages
+      const contractorIds = chat.message
         .map((m) => m.senderId)
-        .filter((id) => id !== providerUserId);
+        .filter((id): id is string => id !== providerUserId);
       recipientUserIds = [...new Set(contractorIds)];
     } else {
       // Notify the provider
@@ -49,15 +49,15 @@ class NotificationService {
       recipientUserIds.map((userId) =>
         prisma.notification.create({
           data: {
-            userId,
+            user: { connect: { id: userId } },
             type: "new_message",
             title: "Nuevo mensaje",
             body,
             chatId,
             isRead: false,
           },
-        })
-      )
+        }),
+      ),
     );
 
     return notifications;
