@@ -6,7 +6,10 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default("1h"),
   DATABASE_URL: z.string(),
   NODE_ENV: z.enum(["development", "production"]).default("development"),
-  FRONTEND_URL: z.string().url(),
+  FRONTEND_URL: z
+    .string()
+    .url()
+    .transform((url) => url.replace(/\/+$/, "")),
   CLOUDINARY_CLOUD_NAME: z.string(),
   CLOUDINARY_API_KEY: z.string(),
   CLOUDINARY_API_SECRET: z.string(),
