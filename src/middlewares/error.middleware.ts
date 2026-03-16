@@ -6,7 +6,7 @@ export function errorHandler(
   error: Error,
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   // Log del error
   logger.error(`Error: ${error.message}`, {
@@ -30,5 +30,11 @@ export function errorHandler(
     success: false,
     message: "Internal server error",
     error: "INTERNAL_SERVER_ERROR",
+    ...(process.env.NODE_ENV !== "production" && {
+      debug: {
+        message: error.message,
+        stack: error.stack,
+      },
+    }),
   });
 }
