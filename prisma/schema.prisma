@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model chat {
+  id              String          @id
+  createdAt       DateTime        @default(now())
+  providerId      String
+  providerprofile providerprofile @relation(fields: [providerId], references: [id], onDelete: Cascade, map: "Chat_providerId_fkey")
+  message         message[]
+
+  @@index([providerId], map: "Chat_providerId_fkey")
+}
+
+model contractorprofile {
+  id       String   @id
+  userId   String   @unique(map: "ContractorProfile_userId_key")
+  fullName String?
+  username String?
+  cuit     String?
+  address  String?
+  city     String?
+  state    String?
+  zipCode  String?
+  phone    String?
+  user     user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "ContractorProfile_userId_fkey")
+  rating   rating[]
+}
+
+model message {
+  id             String   @id
+  chatId         String
+  senderId       String
+  text           String?
+  attachmentUrl  String?
+  attachmentType String?
+  createdAt      DateTime @default(now())
+  chat           chat     @relation(fields: [chatId], references: [id], onDelete: Cascade, map: "Message_chatId_fkey")
+  user           user     @relation(fields: [senderId], references: [id], onDelete: Cascade, map: "Message_senderId_fkey")
+
+  @@index([chatId], map: "Message_chatId_fkey")
+  @@index([senderId], map: "Message_senderId_fkey")
+}
+
+model providerdocument {
+  id              String          @id
+  providerId      String
+  url             String
+  type            String
+  createdAt       DateTime        @default(now())
+  providerprofile providerprofile @relation(fields: [providerId], references: [id], onDelete: Cascade, map: "ProviderDocument_providerId_fkey")
+
+  @@index([providerId], map: "ProviderDocument_providerId_fkey")
+}
+
+model providerprofile {
+  id                   String                 @id
+  userId               String                 @unique(map: "ProviderProfile_userId_key")
+  fullName             String
+  username             String?
+  trade                String?
+  experience           Int?
+  phone                String?
+  address              String?
+  city                 String?
+  state                String?
+  zipCode              String?
+  profileComplete      Boolean                @default(false)
+  title                String?
+  description          String?
+  category             String?
+  estimatedPrice       Float?
+  status               providerprofile_status @default(ACTIVE)
+  videoUrl             String?
+  videoKey             String?
+  videoThumbnailUrl    String?
+  videoDurationSeconds Int?
+  videoMimeType        String?
+  applicationCreatedAt DateTime?
+  averageRating        Float                  @default(0)
+  totalRatings         Int                    @default(0)
+  chat                 chat[]
+  providerdocument     providerdocument[]
+  user                 user                   @relation(fields: [userId], references: [id], onDelete: Cascade, map: "ProviderProfile_userId_fkey")
+  rating               rating[]
+}
+
+model rating {
+  id                  String            @id
+  providerId          String
+  contractorProfileId String
+  rating              Int
+  comment             String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime
+  contractorprofile   contractorprofile @relation(fields: [contractorProfileId], references: [id], onDelete: Cascade, map: "Rating_contractorProfileId_fkey")
+  providerprofile     providerprofile   @relation(fields: [providerId], references: [id], onDelete: Cascade, map: "Rating_providerId_fkey")
+
+  @@unique([providerId, contractorProfileId], map: "Rating_providerId_contractorProfileId_key")
+  @@index([contractorProfileId], map: "Rating_contractorProfileId_fkey")
+  @@index([providerId], map: "Rating_providerId_idx")
+}
+
+model user {
+  id                String             @id
+  email             String             @unique(map: "User_email_key")
+  password          String
+  role              user_role
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime
+  isVerified        Boolean            @default(false)
+  contractorprofile contractorprofile?
+  message           message[]
+  notification      notification[]
+  providerprofile   providerprofile?
+}
+
+model notification {
+  id        String   @id
+  userId    String
+  type      String
+  title     String
+  body      String
+  chatId    String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Notification_userId_fkey")
+
+  @@index([userId, createdAt], map: "Notification_userId_createdAt_idx")
+  @@index([userId, isRead], map: "Notification_userId_isRead_idx")
+}
+
+enum user_role {
+  ADMIN
+  CONTRACTOR
+  PROVIDER
+}
+
+enum providerprofile_status {
+  ACTIVE
+  PAUSED
+  FINISHED
+}
